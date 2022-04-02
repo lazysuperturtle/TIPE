@@ -7,7 +7,6 @@ import json
 import time
 
 
-
 # img_test = cv.imread('test.png')
 # img_gray = cv.cvtColor(img_test, cv.COLOR_BGR2GRAY)
 # template = cv.imread('car4.png',0)
@@ -20,21 +19,26 @@ import time
 # cv.imwrite('res.png',img_test)
 
 
+class Road:
+
+	def __init__(self, coords_point):
+		self._coords = coords_point
+		self._capacity = None
+		self._
+
 class Image(tkt.Frame):
 
 	def __init__(self, tk, file):
 		super().__init__(tk)
 		self.file = file
-		self.window = tkt.Toplevel()
 		self.canvas = tkt.Canvas(self, width=800, height=800)
-		self.canvas2 = tkt.Canvas(self.window, width=800, height=800)
 
-		self.img = tkt.PhotoImage(file=self.file)
+		self.img = tkt.PhotoImage(file="test.png")
 		self.canvas.create_image(0, 0, anchor=tkt.NW, image=self.img)
 		self.bttn = tkt.Button(self, text="Save", command=self.save)
 		self.bttn.pack()
-		self.bttn1 = tkt.Button(self, text="Test", command=self.test)
-		self.bttn1.pack()
+		# self.bttn1 = tkt.Button(self, text="Test", command=self.test)
+		# self.bttn1.pack()
 		self.bttn2 = tkt.Button(self, text="Restore", command=self.restore)
 		self.bttn2.pack()
 		self.bttn3 = tkt.Button(self, text="Connect", command=self.k_neigh)
@@ -43,19 +47,19 @@ class Image(tkt.Frame):
 		self.circles = []
 		self.canvas.bind("<Button-1>", self.get_coords)
 		self.canvas.pack()
-		self.canvas2.pack()
 		self.pack()
 
 		self.image = cv.imread(self.file)
+
 		color = [0,0,0] #230 230 230 
 
 		y, x = np.where(np.all(self.image==color, axis=2))
-		self.restricted_zones = np.column_stack((x, y))
-		# self.restricted_zones = list(zip(x,y))
+		# self.restricted_zones = np.column_stack((x, y))
+		self.restricted_zones = list(zip(x,y))
 		
-		r=1
-		for x, y in self.restricted_zones:
-			self.canvas2.create_oval(x-r, y-r, x+r, y+r, fill='red')	
+		# r=1
+		# for x, y in self.restricted_zones:
+			# self.canvas2.create_oval(x-r, y-r, x+r, y+r, fill='red')	
 
 
 	def save(self):
@@ -69,14 +73,14 @@ class Image(tkt.Frame):
 		data.sort()
 		for i in range(1, len(data)):
 			c1, c2 = data[i-1], data[i]
-			self.canvas.create_line(c1[0], c1[1], c2[0], c2[1], fill='green', width=1)
+			self.canvas.create_line(c1[0], c1[1], c2[0], c2[1], fill='red', width=2)
 
 	def restore(self):
 		with open("data.json", "r") as jfile:
 			file_data = jfile.readlines()
 			data = json.loads(file_data[0])
 			self.coords = data
-			r=5
+			r=3
 			data.sort()
 			for coord in data:
 				x, y = coord
@@ -91,12 +95,12 @@ class Image(tkt.Frame):
 	def get_coords(self, event):
 		x, y = event.x, event.y
 		self.coords.append((x, y))
-		r = 5
+		r = 3
 		circle = self.canvas.create_oval(x-r, y-r, x+r, y+r, fill='red')
 		self.circles.append(circle)
 
 	def k_neigh(self):
-		k=8
+		k=3
 		distance = lambda c1, c2 : sqrt( abs(c1[0] - c2[0])**2 + abs(c1[1] - c2[1])**2 )
 		map_coords = self.coords.copy()
 		for main_coord in map_coords:
@@ -107,17 +111,13 @@ class Image(tkt.Frame):
 
 
 	def _draw_lines(self, main, coords):
-
-		contains = lambda l1, l2: True in np.isin(l1,l2)
-		good_coords = [c for c in coords if True not in np.isin(self.get_line_coords(main, c), self.restricted_zones)]
-		print()
-		for c in good_coords:
-			print(np.isin(self.get_line_coords(main, c), self.restricted_zones))
-			line=self.canvas.create_line(c[0], c[1], main[0], main[1], fill='green', width=1)
-			if main[0]<c[0]:
-				self.test(main,c)
-			else:
-				self.test(c, main)
+		contains = lambda l1, l2: np.isin(l1,l2)
+		for coord in coords:
+			line = self.get_line_coords(main, coord)
+			m_line = line[len(line)//2]
+			in_ = m_line in self.restricted_zones
+			if not in_:
+				line=self.canvas.create_line(coord[0], coord[1], main[0], main[1], fill='green', width=2)
 
 
 	def get_line_coords(self, p1, p2):
@@ -132,22 +132,11 @@ class Image(tkt.Frame):
 		p = (y1 - y2)/(x1 - x2)
 		b = (x1*y2 - x2*y1)/(x1 - x2)
 		r = range(x1, x2) if x1<x2 else range(x2, x1)
-		line = [p*x+b for x in r]
+		line=[]
+		for x in r:
+			y = p*x+b
+			line.append((x,int(y)))
 		return line
-
-	def test(self, p1, p2):
-		if p1[0] == p2[0]: p1[0] += 1
-		p = (p1[1] - p2[1])/(p1[0] - p2[0])
-		b = (p1[0]*p2[1] - p2[0]*p1[1])/(p1[0] - p2[0])
-		line = []
-		for x in range(p1[0], p2[0]+1):
-			y = p * x + b
-			line.append([x, y])
-		r = 2
-		for point in line:
-			x, y = point
-			self.canvas.create_oval(x-r, y-r, x+r, y+r, fill='red')	
-
 
 
 tk= tkt.Tk()
