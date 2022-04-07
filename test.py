@@ -6,7 +6,7 @@ import cv2 as cv
 import json
 import time
 
-#Denis Pidar
+
 
 # img_test = cv.imread('test.png')
 # img_gray = cv.cvtColor(img_test, cv.COLOR_BGR2GRAY)
