@@ -24,7 +24,7 @@ class Road:
 	def __init__(self, coords_point):
 		self._coords = coords_point
 		self._capacity = None
-		self._
+		self._ 
 
 class Image(tkt.Frame):
 
