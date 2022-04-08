@@ -16,22 +16,38 @@
 import cv2 as cv
 import numpy as np
 
-image = cv.imread("gray.png")
-hsv=cv.cvtColor(image,cv.COLOR_BGR2HSV)
+image = cv.imread("result1.png")
+# hsv=cv.cvtColor(image)
 
 # # Define lower and uppper limits of what we call "brown"
 # brown_lo=np.array([10,0,0])
 # brown_hi=np.array([20,255,255])
 
 # Mask image to only select browns
-color = [230,230,230]
-color2 = [47,47,47]
+# color = [163,250,250]
+# color2 = [248,248,248]
 
-# Change image to red where we found brown
-image[np.all(image == color, axis=-1)]=(0,0,0)
-image[np.all(image == [0,0,0], axis=-1)]=(0,0,0)
+# # Change image to red where we found brown
+# image[np.all(image == color, axis=-1)]=color2
+# # image[np.all(image == [0,0,0], axis=-1)]=
 
-cv.imwrite("result.png",image)
+# cv.imwrite("result1.png",image)
+import numpy as np
 	
 
+def new_get_line(p1, p2):
+	x1, y1 = p1
+	x2, y2 = p2
+	slope = (y1 - y2)/(x1 - x2)
+	b = (x1*y2 - x2*y1)/(x1 - x2)
+	r = (x1, x2) if x1<x2 else (x2, x1)
+	line=[]
+	for x in np.arange(r[0], r[1], 0.1):
+		y = slope*x+b
+		line.append((int(x),int(y)))
+	print(line) 
 
+p1 = 438, 9
+p2 = 435, 100
+
+print(new_get_line(p1, p2))
